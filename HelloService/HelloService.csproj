@@ -1,0 +1,28 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp2.2</TargetFramework>
+    <AspNetCoreHostingModel>InProcess</AspNetCoreHostingModel>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.App" />
+    <PackageReference Include="Microsoft.AspNetCore.Razor.Design" Version="2.2.0" PrivateAssets="All" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Entities\" />
+    <Folder Include="Entities\DB\" />
+    <Folder Include="Entities\Request\" />
+    <Folder Include="Entities\Response\" />
+    <Folder Include="DataLogic\" />
+    <Folder Include="DataAccess\" />
+    <Folder Include="Entities\Model\" />
+    <Folder Include="Helper\" />
+    <Folder Include="Extension\" />
+    <Folder Include="DataAccess\Interface\" />
+    <Folder Include="DataAccess\Implement\" />
+    <Folder Include="DataLogic\Interface\" />
+    <Folder Include="DataLogic\Implement\" />
+  </ItemGroup>
+</Project>
