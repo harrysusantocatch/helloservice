@@ -20,7 +20,6 @@
     <Folder Include="DataLogic\" />
     <Folder Include="DataAccess\" />
     <Folder Include="Entities\Model\" />
-    <Folder Include="Helper\" />
     <Folder Include="Extension\" />
     <Folder Include="DataAccess\Interface\" />
     <Folder Include="DataAccess\Implement\" />
