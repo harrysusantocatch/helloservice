@@ -1,7 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using Catcher.DB.DAO;
+using HelloService.Entities.DB;
 using Microsoft.AspNetCore.Mvc;
 
 namespace HelloService.Controllers
@@ -10,11 +8,17 @@ namespace HelloService.Controllers
     [ApiController]
     public class ValuesController : ControllerBase
     {
+        public static readonly IDao<StatusApp> statusAppDao = DaoContext.GetDao<StatusApp>();
+
         // GET api/values
-        [HttpGet]
-        public ActionResult<IEnumerable<string>> Get()
+        [HttpGet("/")]
+        public IActionResult Get()
         {
-            return new string[] { "value1", "value2" };
+            string status = "DEAD";
+            var result = statusAppDao.GetAll();
+            if (result.Count == 0) status = statusAppDao.InsertAndGet(new StatusApp() { Status = "RUNNING" }).Status;
+            else status = result[0].Status;
+            return Ok(status);
         }
 
         // GET api/values/5
