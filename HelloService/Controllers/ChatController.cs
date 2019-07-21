@@ -11,9 +11,51 @@ namespace HelloService.Controllers
     public class ChatController : Controller
     {
         // GET: /<controller>/
-        public IActionResult Index()
+        public IActionResult GetChatRoom()
         {
-            return View();
+            return Ok();
         }
+
+        public IActionResult CreateChatRoom()
+        {
+            return Ok();
+        }
+
+        public IActionResult RemoveChatRoom()
+        {
+            return Ok();
+        }
+
+        public IActionResult GetMessages()
+        {
+            return Ok();
+        }
+
+        public IActionResult SendMessage()
+        {
+            return Ok();
+        }
+
+        public IActionResult RemoveMessage()
+        {
+            return Ok();
+        }
+
+        public IActionResult GetLastSeen()
+        {
+            return Ok();
+        }
+
+        public IActionResult InvokeOnline()
+        {
+            return Ok();
+        }
+
+        public IActionResult InvokeOffline()
+        {
+            return Ok();
+        }
+
+
     }
 }

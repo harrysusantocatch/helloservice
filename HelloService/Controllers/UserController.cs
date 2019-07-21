@@ -11,9 +11,46 @@ namespace HelloService.Controllers
     public class UserController : Controller
     {
         // GET: /<controller>/
-        public IActionResult Index()
+        public IActionResult Registration()
         {
-            return View();
+            return Ok();
         }
+
+        public IActionResult Login()
+        {
+            return Ok();
+        }
+
+        public IActionResult Logout()
+        {
+            return Ok();
+        }
+
+        public IActionResult VerificationCode()
+        {
+            return Ok();
+        }
+
+        public IActionResult ResendCode()
+        {
+            return Ok();
+        }
+
+        public IActionResult UpdateProfilePicture()
+        {
+            return Ok();
+        }
+
+        public IActionResult UpdateName()
+        {
+            return Ok();
+        }
+
+        public IActionResult UpdateAbout()
+        {
+            return Ok();
+        }
+
+
     }
 }
