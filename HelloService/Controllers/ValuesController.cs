@@ -1,4 +1,7 @@
-﻿using Catcher.DB.DAO;
+﻿using System;
+using Catcher.DB.DAO;
+using HelloService.DataAccess.Implement;
+using HelloService.DataLogic.Implement;
 using HelloService.Entities.DB;
 using Microsoft.AspNetCore.Mvc;
 
@@ -8,17 +11,24 @@ namespace HelloService.Controllers
     [ApiController]
     public class ValuesController : ControllerBase
     {
-        public static readonly IDao<StatusApp> statusAppDao = DaoContext.GetDao<StatusApp>();
+        private StatusAppLogic statusAppLogic;
+        public ValuesController()
+        {
+            statusAppLogic = new StatusAppLogic(new StatusAppDao());
+        }
 
         // GET api/values
         [HttpGet("/")]
         public IActionResult Get()
         {
-            string status = "DEAD";
-            var result = statusAppDao.GetAll();
-            if (result.Count == 0) status = statusAppDao.InsertAndGet(new StatusApp() { Status = "RUNNING" }).Status;
-            else status = result[0].Status;
-            return Ok(status);
+            try
+            {
+                return Ok($"Application is running & Database {statusAppLogic.GetStatus()}");
+            }
+            catch(Exception e)
+            {
+                return Ok($"Application is running & Database disconnected {System.Environment.NewLine}ERROR : {e.Message}");
+            }
         }
 
         // GET api/values/5
