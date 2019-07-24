@@ -13,5 +13,8 @@ namespace HelloService.Entities.DB
 
         [DtoCompositeField, BsonSerializer(typeof(ObjectRef<User>))]
         public User Receiver { get; set; }
+
+        [BsonSerializer(typeof(ObjectRef<Message>))]
+        public Message LastMessage { get; set; }
     }
 }

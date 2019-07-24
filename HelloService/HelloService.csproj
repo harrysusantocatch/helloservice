@@ -15,17 +15,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Entities\" />
     <Folder Include="Entities\DB\" />
     <Folder Include="Entities\Request\" />
-    <Folder Include="Entities\Response\" />
-    <Folder Include="DataLogic\" />
-    <Folder Include="DataAccess\" />
     <Folder Include="Entities\Model\" />
     <Folder Include="Extension\" />
-    <Folder Include="DataAccess\Interface\" />
-    <Folder Include="DataAccess\Implement\" />
-    <Folder Include="DataLogic\Interface\" />
-    <Folder Include="DataLogic\Implement\" />
   </ItemGroup>
 </Project>
