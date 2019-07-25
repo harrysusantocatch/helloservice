@@ -1,4 +1,5 @@
-﻿using HelloService.Entities.DB;
+﻿using Catcher.DB.DTO;
+using HelloService.Entities.DB;
 using HelloService.Entities.Model;
 using System;
 using System.Collections.Generic;
@@ -13,26 +14,16 @@ namespace HelloService.Entities.Response
         public Blob ProfilePicture { get; set; }
         public string Text { get; set; }
         public bool Read { get; set; }
-        private string _date;
+        public string Date { get; set; }
 
-        public ChatRoomResponse(ChatRoom chatRoom)
+        public ChatRoomResponse(User user, ChatRoom chatRoom, string gmt)
         {
-            // TODO
+            var displayUser = user.Phone == chatRoom.Sender.Phone ? chatRoom.Receiver : chatRoom.Sender;
+            Name = displayUser.FullName;
+            ProfilePicture = displayUser.ProfilePicture;
+            Text = chatRoom.LastMessage.Text;
+            Read = chatRoom.LastMessage.Read;
+            Date = chatRoom.LastMessage.Date;
         }
-
-        public string Date {
-            get
-            {
-                if(_date != null)
-                {
-                    //format date 9:30 12:17 19:20 yesterday 31/10/2019
-                }
-                return null;
-            }
-            set
-            {
-                _date = value;
-            } }
-
     }
 }

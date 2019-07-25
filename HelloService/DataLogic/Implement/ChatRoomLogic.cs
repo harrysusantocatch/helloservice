@@ -13,12 +13,12 @@ namespace HelloService.DataLogic.Implement
     public class ChatRoomLogic : IChatRoomLogic
     {
         private readonly ChatRoomDao chatRoomDao;
-        public ChatRoomLogic(ChatRoomDao _chatRoomDao)
+        public ChatRoomLogic()
         {
-            chatRoomDao = _chatRoomDao;
+            chatRoomDao = new ChatRoomDao();
         }
 
-        public List<ChatRoomResponse> GetChatRooms(User user)
+        public List<ChatRoomResponse> GetChatRooms(User user, string gmt)
         {
             var result = new List<ChatRoomResponse>();
             var userRef = user.ToRef();
@@ -26,6 +26,7 @@ namespace HelloService.DataLogic.Implement
             if(chatRooms.Count > 0)
             {
                 var cleanChatRoom = CleanChatRoom(chatRooms);
+                if (cleanChatRoom.Count == 0) return result;
                 cleanChatRoom.Sort((chat1, chat2) =>
                 {
                     if (chat1.LastMessage.Date > chat2.LastMessage.Date)
@@ -39,9 +40,9 @@ namespace HelloService.DataLogic.Implement
                     else
                         return 0;
                 });
-                foreach(var chatRoom in chatRooms)
+                foreach(var chatRoom in cleanChatRoom)
                 {
-                    result.Add(new ChatRoomResponse(chatRoom));
+                    result.Add(new ChatRoomResponse(user, chatRoom, gmt));
                 }
             }
             return result;
@@ -53,7 +54,7 @@ namespace HelloService.DataLogic.Implement
             {
                 if (chatRoom.LastMessage == null) chatRooms.Remove(chatRoom);
             }
-            return chatRooms.ToList();
+            return new List<ChatRoom>(chatRooms);
         }
     }
 }

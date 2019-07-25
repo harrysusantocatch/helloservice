@@ -17,10 +17,10 @@ namespace HelloService.DataLogic.Implement
     {
         private readonly UserDao userDao;
         private readonly RegistrationCodeDao registerDao;
-        public UserLogic(UserDao _userDao, RegistrationCodeDao _registerDao)
+        public UserLogic()
         {
-            userDao = _userDao;
-            registerDao = _registerDao;
+            userDao = new UserDao();
+            registerDao = new RegistrationCodeDao();
         }
 
         public User FindByPhoneNumber(string phoneNumber)

@@ -11,10 +11,10 @@ namespace HelloService.Controllers
 {
     public class UserController : Controller
     {
-        private UserLogic userLogic;
+        private readonly UserLogic userLogic;
         public UserController()
         {
-            userLogic = new UserLogic(new UserDao(), new RegistrationCodeDao());
+            userLogic = new UserLogic();
         }
 
         [HttpPost, AllowAnonymous]

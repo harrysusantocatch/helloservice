@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using HelloService.DataLogic.Implement;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -11,6 +12,13 @@ namespace HelloService.Controllers
 {
     public class ChatController : Controller
     {
+        private readonly ChatRoomLogic chatRoomLogic;
+
+        public ChatController()
+        {
+            chatRoomLogic = new ChatRoomLogic();
+        }
+
         [HttpPost, Authorize]
         public IActionResult GetChatRoom()
         {
