@@ -1,6 +1,7 @@
 ﻿using Catcher.DB.DTO;
 using HelloService.Entities.DB;
 using HelloService.Entities.Model;
+using HelloService.Helper;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -23,7 +24,15 @@ namespace HelloService.Entities.Response
             ProfilePicture = displayUser.ProfilePicture;
             Text = chatRoom.LastMessage.Text;
             Read = chatRoom.LastMessage.Read;
-            Date = chatRoom.LastMessage.Date;
+            var clientDateNow = TimeConverter.ConvertFromServerTime(Constant.SERVER_TIME, gmt);
+            var lastClientDate = TimeConverter.ConvertFromServerTime(chatRoom.LastMessage.Date, gmt);
+            var days = (clientDateNow - lastClientDate).Days;
+            if (days == 0)
+            {
+                Date = lastClientDate.ToString("HH:mm");
+            }
+            else if (days == 1) Date = "Yesterday";
+            else Date = lastClientDate.ToString("dd/MM/yyyy HH:mm");
         }
     }
 }

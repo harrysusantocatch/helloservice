@@ -9,6 +9,6 @@ namespace HelloService.DataLogic.Interface
 {
     public interface IChatRoomLogic
     {
-        List<ChatRoomResponse> GetChatRooms(User user);
+        List<ChatRoomResponse> GetChatRooms(User user, string gmt);
     }
 }

@@ -19,13 +19,13 @@ namespace HelloService.Controllers
             chatRoomLogic = new ChatRoomLogic();
         }
 
-        [HttpPost, Authorize]
-        public IActionResult GetChatRoom()
+        [HttpGet, Authorize]
+        public IActionResult GetChatRoom(string gmt)
         {
             var user = this.GetUserAuthorize();
             if (user == null) return Unauthorized();
-
-            return Ok();
+            var responses = chatRoomLogic.GetChatRooms(user, gmt);
+            return Ok(responses);
         }
 
         public IActionResult CreateChatRoom()
