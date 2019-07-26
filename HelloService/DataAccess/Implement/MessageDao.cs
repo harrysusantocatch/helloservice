@@ -11,5 +11,10 @@ namespace HelloService.DataAccess.Implement
     public class MessageDao : BaseDao<Message>, IMessageDao
     {
         private static readonly IDao<Message> messageDao = DaoContext.GetDao<Message>();
+
+        public List<Message> FindMessageByLastDate(string chatRoomID, long date)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

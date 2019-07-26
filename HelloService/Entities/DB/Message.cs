@@ -9,8 +9,11 @@ namespace HelloService.Entities.DB
     [DtoClass(DATABASE_NAME, "MESSAGES")]
     public class Message : Dto
     {
-        [DtoUniqueField]
+        [DtoUniqueField, BsonSerializer(typeof(ObjectRef<ChatRoom>))]
         public ChatRoom ChatRoom { get; set; }
+
+        [BsonSerializer(typeof(ObjectRef<User>))]
+        public User MessageOwner { get; set; }
 
         [BsonSerializer(typeof(ObjectRef<Message>))]
         public Message ChildMessage { get; set; }

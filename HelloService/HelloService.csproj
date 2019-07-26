@@ -16,7 +16,6 @@
 
   <ItemGroup>
     <Folder Include="Entities\DB\" />
-    <Folder Include="Entities\Request\" />
     <Folder Include="Entities\Model\" />
     <Folder Include="Extension\" />
   </ItemGroup>

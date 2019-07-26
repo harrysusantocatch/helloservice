@@ -13,6 +13,12 @@ namespace HelloService.DataAccess.Implement
             return success;
         }
 
+        public T FindByID(string id)
+        {
+            var value = DaoContext.GetDao<T>().Find.ByID(id);
+            return value;
+        }
+
         public bool Insert(T dto)
         {
             var success = DaoContext.GetDao<T>().Insert(dto);

@@ -9,5 +9,6 @@ namespace HelloService.DataAccess.Interface
         T InsertAndGet(T dto);
         bool Update(T dto, string[] fields);
         bool Delete(T dto);
+        T FindByID(string id);
     }
 }

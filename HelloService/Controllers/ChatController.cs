@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using HelloService.DataLogic.Implement;
+using HelloService.Entities.Request;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -12,11 +13,11 @@ namespace HelloService.Controllers
 {
     public class ChatController : Controller
     {
-        private readonly ChatRoomLogic chatRoomLogic;
+        private readonly ChatLogic chatLogic;
 
         public ChatController()
         {
-            chatRoomLogic = new ChatRoomLogic();
+            chatLogic = new ChatLogic();
         }
 
         [HttpGet, Authorize]
@@ -24,26 +25,40 @@ namespace HelloService.Controllers
         {
             var user = this.GetUserAuthorize();
             if (user == null) return Unauthorized();
-            var responses = chatRoomLogic.GetChatRooms(user, gmt);
+            var responses = chatLogic.GetChatRooms(user, gmt);
             return Ok(responses);
         }
 
-        public IActionResult CreateChatRoom()
+        [HttpPost, Authorize]
+        public IActionResult CreateChatRoom(ChatRoomRequest request)
         {
+            var user = this.GetUserAuthorize();
+            if (user == null) return Unauthorized();
+            var response = chatLogic.CreatChatRoom(request);
+            if (response) return Ok();
+            else return Forbid();
+        }
+
+        [HttpPost, Authorize]
+        public IActionResult SendMessage(SendMessageRequest request)
+        {
+            var user = this.GetUserAuthorize();
+            if (user == null) return Unauthorized();
+            var response = chatLogic.SendMessage(user, request);
+            if (response) return Ok();
+            else return Forbid();
+        }
+
+        [HttpGet, Authorize]
+        public IActionResult GetMessages(string chatRoomID, string lastDate)
+        {
+            var user = this.GetUserAuthorize();
+            if (user == null) return Unauthorized();
+            var response = chatLogic.GetMessage(user, chatRoomID, lastDate);
             return Ok();
         }
 
         public IActionResult RemoveChatRoom()
-        {
-            return Ok();
-        }
-
-        public IActionResult GetMessages()
-        {
-            return Ok();
-        }
-
-        public IActionResult SendMessage()
         {
             return Ok();
         }
