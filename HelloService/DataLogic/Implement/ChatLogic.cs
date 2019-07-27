@@ -17,12 +17,14 @@ namespace HelloService.DataLogic.Implement
         private readonly ChatRoomDao chatRoomDao;
         private readonly UserDao userDao;
         private readonly MessageDao messageDao;
+        private readonly LastSeenDao lastSeenDao;
 
         public ChatLogic()
         {
             chatRoomDao = new ChatRoomDao();
             userDao = new UserDao();
             messageDao = new MessageDao();
+            lastSeenDao = new LastSeenDao();
         }
 
         public List<ChatRoomResponse> GetChatRooms(User user, string gmt)
@@ -83,6 +85,34 @@ namespace HelloService.DataLogic.Implement
             }else return false;
         }
 
+        public bool InvokeStatus(User user, string statusOrStrDate)
+        {
+            var lastSeen = lastSeenDao.FindByUniqueID("User", user.ToRef());
+            if (lastSeen == null)
+            {
+                var model = new LastSeen
+                {
+                    User = user,
+                    LongDateString = statusOrStrDate
+                };
+                return lastSeenDao.Insert(model);
+            }
+            else
+            {
+                lastSeen.LongDateString = statusOrStrDate;
+                return lastSeenDao.Update(lastSeen, new string[] { "LongDateString" });
+            }
+        }
+
+        public LastSeenResponse GetLastSeenByPhone(string phone, string gmt)
+        {
+            var user = userDao.FindByPhoneNumber(phone);
+            if (user == null) return null;
+            var lastSeen = lastSeenDao.FindByUniqueID("User", user.ToRef());
+            if (lastSeen == null) return null;
+            return new LastSeenResponse(lastSeen.LongDateString, gmt);
+        }
+
         public List<MessageResponse> GetMessage(User user, string chatRoomID, string lastDate)
         {
             var responses = new List<MessageResponse>();
@@ -92,15 +122,26 @@ namespace HelloService.DataLogic.Implement
             if (invalidUser) return responses;
             long date = long.Parse(lastDate);
             var messages = messageDao.FindMessageByLastDate(chatRoomID, date);
-            if(messages.Count > 0)
+            if (messages.Count > 0)
             {
-                foreach(var message in messages)
+                foreach (var message in messages)
                 {
-                    // TODO nanti bikin update Read di controller atau async
                     responses.Add(new MessageResponse(message));
                 }
             }
+
+            // TODO nanti bikin update Read di controller atau async
+            AsyUpdateReads(messages);
             return responses;
+        }
+
+        private void AsyUpdateReads(List<Message> messages)
+        {
+            foreach (var message in messages)
+            {
+                message.Read = true;
+                messageDao.Update(message, new string[] { "Read" });
+            }
         }
 
         public bool CreatChatRoom(ChatRoomRequest request)

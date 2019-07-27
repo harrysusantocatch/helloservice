@@ -104,5 +104,15 @@ namespace HelloService.Helper
             if (!TimeZones.ContainsKey(result)) throw new ArgumentException("Invalid GMT : " + gmt + "\nand after trying to reformat it : " + result);
             return result;
         }
+
+        public static string GetDisplayDate(DateTime date, string gmt)
+        {
+            var clientDateNow = ConvertFromServerTime(Constant.SERVER_TIME, gmt);
+            var lastClientDate = ConvertFromServerTime(date, gmt);
+            var days = (clientDateNow - lastClientDate).Days;
+            if (days == 0) return lastClientDate.ToString("HH:mm");
+            else if (days == 1) return "Yesterday";
+            else return lastClientDate.ToString("dd/MM/yyyy HH:mm");
+        }
     }
 }

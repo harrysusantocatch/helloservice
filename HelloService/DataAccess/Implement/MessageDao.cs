@@ -1,6 +1,9 @@
 ﻿using Catcher.DB.DAO;
+using Catcher.DB.DTO;
+using Catcher.Model;
 using HelloService.DataAccess.Interface;
 using HelloService.Entities.DB;
+using MongoDB.Driver;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,9 +15,13 @@ namespace HelloService.DataAccess.Implement
     {
         private static readonly IDao<Message> messageDao = DaoContext.GetDao<Message>();
 
-        public List<Message> FindMessageByLastDate(string chatRoomID, long date)
+        public List<Message> FindMessageByLastDate(ChatRoom chatRoom, long lastDate)
         {
-            throw new NotImplementedException();
+            var builder = new FilterDefinitionBuilder<Message>();
+            var filterChat = builder.Eq("ChatRoom", chatRoom.ToRef());
+            var filterDate = builder.Gt("Date", lastDate);
+            var messages = messageDao.Find.WhenMatch(filterChat & filterDate, new PageDefinition("Date", false));
+            return new List<Message>(messages);
         }
     }
 }

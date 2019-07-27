@@ -15,7 +15,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Entities\DB\" />
     <Folder Include="Entities\Model\" />
     <Folder Include="Extension\" />
   </ItemGroup>

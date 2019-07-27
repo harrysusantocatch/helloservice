@@ -19,7 +19,7 @@ namespace HelloService.Entities.DB
         public Message ChildMessage { get; set; }
 
         public string Text { get; set; }
-        public DateTime Date { get; set; }
+        public long Date { get; set; }
         public bool Read { get; set; }
         public MessageType Type { get; set; }
         public List<object> Contents { get; set; }

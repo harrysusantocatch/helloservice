@@ -10,5 +10,6 @@ namespace HelloService.DataAccess.Interface
         bool Update(T dto, string[] fields);
         bool Delete(T dto);
         T FindByID(string id);
+        T FindByUniqueID<V>(string fieldName, V fieldValue);
     }
 }

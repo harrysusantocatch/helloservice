@@ -19,6 +19,12 @@ namespace HelloService.DataAccess.Implement
             return value;
         }
 
+        public T FindByUniqueID<V>(string fieldName, V fieldValue)
+        {
+            var value = DaoContext.GetDao<T>().Find.ByUniqueID(fieldName, fieldValue);
+            return value;
+        }
+
         public bool Insert(T dto)
         {
             var success = DaoContext.GetDao<T>().Insert(dto);

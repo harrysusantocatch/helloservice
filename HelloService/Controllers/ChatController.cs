@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using HelloService.DataLogic.Implement;
 using HelloService.Entities.Request;
+using HelloService.Helper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -55,7 +56,37 @@ namespace HelloService.Controllers
             var user = this.GetUserAuthorize();
             if (user == null) return Unauthorized();
             var response = chatLogic.GetMessage(user, chatRoomID, lastDate);
-            return Ok();
+            return Ok(response);
+        }
+        
+        [HttpGet, Authorize]
+        public IActionResult GetLastSeen(string phone, string gmt)
+        {
+            var user = this.GetUserAuthorize();
+            if (user == null) return Unauthorized();
+            var response = chatLogic.GetLastSeenByPhone(phone, gmt);
+            if (response == null) return NoContent();
+            else return Ok(response);
+        }
+
+        [HttpPost, Authorize]
+        public IActionResult InvokeOnline()
+        {
+            var user = this.GetUserAuthorize();
+            if (user == null) return Unauthorized();
+            var response = chatLogic.InvokeStatus(user, "Online");
+            if (!response) return Forbid();
+            else return Ok();
+        }
+
+        [HttpGet, Authorize]
+        public IActionResult InvokeOffline() // pangiil ini untuk insert awal
+        {
+            var user = this.GetUserAuthorize();
+            if (user == null) return Unauthorized();
+            var response = chatLogic.InvokeStatus(user, Constant.SERVER_TIME.Ticks.ToString()); // Test it
+            if (!response) return Forbid();
+            else return Ok();
         }
 
         public IActionResult RemoveChatRoom()
@@ -67,22 +98,5 @@ namespace HelloService.Controllers
         {
             return Ok();
         }
-
-        public IActionResult GetLastSeen()
-        {
-            return Ok();
-        }
-
-        public IActionResult InvokeOnline()
-        {
-            return Ok();
-        }
-
-        public IActionResult InvokeOffline()
-        {
-            return Ok();
-        }
-
-
     }
 }

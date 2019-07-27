@@ -24,15 +24,8 @@ namespace HelloService.Entities.Response
             ProfilePicture = displayUser.ProfilePicture;
             Text = chatRoom.LastMessage.Text;
             Read = chatRoom.LastMessage.Read;
-            var clientDateNow = TimeConverter.ConvertFromServerTime(Constant.SERVER_TIME, gmt);
-            var lastClientDate = TimeConverter.ConvertFromServerTime(chatRoom.LastMessage.Date, gmt);
-            var days = (clientDateNow - lastClientDate).Days;
-            if (days == 0)
-            {
-                Date = lastClientDate.ToString("HH:mm");
-            }
-            else if (days == 1) Date = "Yesterday";
-            else Date = lastClientDate.ToString("dd/MM/yyyy HH:mm");
+            Date = TimeConverter.GetDisplayDate(chatRoom.LastMessage.Date, gmt);
         }
+
     }
 }
