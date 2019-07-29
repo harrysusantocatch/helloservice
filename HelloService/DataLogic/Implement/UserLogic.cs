@@ -15,6 +15,8 @@ namespace HelloService.DataLogic.Implement
 {
     public class UserLogic : IUserLogic
     {
+        private static UserLogic _instance;
+        public static UserLogic Instance => _instance ?? (_instance = new UserLogic());
         private readonly UserDao userDao;
         private readonly RegistrationCodeDao registerDao;
         public UserLogic()

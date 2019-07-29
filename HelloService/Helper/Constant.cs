@@ -12,5 +12,7 @@ namespace HelloService.Helper
         public static DateTime SERVER_TIME => TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, SERVER_TIME_ZONE);
         public static TimeZoneInfo SERVER_TIME_ZONE => TimeConverter.TimeZoneInfoGetter(SERVER_GMT);
         public static string SERVER_GMT => "+07:00";
+
+        public static long DEFAULT_LASTDATE = 0;
     }
 }

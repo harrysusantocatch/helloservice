@@ -11,23 +11,17 @@ namespace HelloService.Controllers
 {
     public class UserController : Controller
     {
-        private readonly UserLogic userLogic;
-        public UserController()
-        {
-            userLogic = new UserLogic();
-        }
-
         [HttpPost, AllowAnonymous]
         public IActionResult Login([FromBody] LoginRequest request)
         {
             var headers = Request.Headers;
             var device = UserHelper.GetDeviceFromHeader(headers);
             if (device == null) return BadRequest();
-            var user = userLogic.FindByPhoneNumber(request.Phone);
+            var user = UserLogic.Instance.FindByPhoneNumber(request.Phone);
             if (user == null) return NoContent();
             if (!user.Active) return NoContent();
             if (user.SecurityCode != request.SecurityCode) return NoContent();
-            var result = userLogic.Login(user, device);
+            var result = UserLogic.Instance.Login(user, device);
             return Ok(result);
         }
 
@@ -36,14 +30,14 @@ namespace HelloService.Controllers
         {
             var user = this.GetUserAuthorize();
             if (user == null) return Unauthorized();
-            userLogic.Logout(user);
+            UserLogic.Instance.Logout(user);
             return Ok();
         }
 
         [HttpPost]
         public IActionResult Registration([FromBody] RegisterRequest request)
         {
-            var result = userLogic.Register(request);
+            var result = UserLogic.Instance.Register(request);
             return Ok(result);
         }
 
@@ -51,7 +45,7 @@ namespace HelloService.Controllers
         public IActionResult VerificationCode(string phone, string code)
         {
             var request = new ValidationCodeRequest { Phone = phone, Code = code };
-            var isValid = userLogic.IsValidVerificationCode(request);
+            var isValid = UserLogic.Instance.IsValidVerificationCode(request);
             if (isValid) return Ok();
             else return Forbid();
         }
@@ -59,7 +53,7 @@ namespace HelloService.Controllers
         [HttpPost]
         public IActionResult ResendCode([FromBody] ResendCodeRequest request)
         {
-            var success = userLogic.ResendCode(request.Phone);
+            var success = UserLogic.Instance.ResendCode(request.Phone);
             if (success) return Ok();
             else return Forbid();
         }
@@ -69,7 +63,7 @@ namespace HelloService.Controllers
         {
             var user = this.GetUserAuthorize();
             if (user == null) return Unauthorized();
-            var success = userLogic.UpdateProfilePicture(user, request.Content);
+            var success = UserLogic.Instance.UpdateProfilePicture(user, request.Content);
             if (success) return Ok();
             else return Forbid();
         }
@@ -79,7 +73,7 @@ namespace HelloService.Controllers
         {
             var user = this.GetUserAuthorize();
             if (user == null) return Unauthorized();
-            var success = userLogic.UpdateName(user, request.Name);
+            var success = UserLogic.Instance.UpdateName(user, request.Name);
             if (success) return Ok();
             else return Forbid();
         }
@@ -89,7 +83,7 @@ namespace HelloService.Controllers
         {
             var user = this.GetUserAuthorize();
             if (user == null) return Unauthorized();
-            var success = userLogic.UpdateAbout(user, request.About);
+            var success = UserLogic.Instance.UpdateAbout(user, request.About);
             if (success) return Ok();
             else return Forbid();
         }

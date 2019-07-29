@@ -17,14 +17,14 @@ namespace HelloService.Entities.Response
         public bool Read { get; set; }
         public string Date { get; set; }
 
-        public ChatRoomResponse(User user, ChatRoom chatRoom, string gmt)
+        public ChatRoomResponse(User user, ChatRoom chatRoom, Message message, string gmt)
         {
-            var displayUser = user.Phone == chatRoom.Sender.Phone ? chatRoom.Receiver : chatRoom.Sender;
+            var displayUser = user.Phone == chatRoom.User1.Phone ? chatRoom.User2 : chatRoom.User1;
             Name = displayUser.FullName;
             ProfilePicture = displayUser.ProfilePicture;
-            Text = chatRoom.LastMessage.Text;
-            Read = chatRoom.LastMessage.Read;
-            Date = TimeConverter.GetDisplayDate(chatRoom.LastMessage.Date, gmt);
+            Text = message.Text;
+            Read = message.Read;
+            Date = TimeConverter.GetDisplayDate(new DateTime(message.Date), gmt);
         }
 
     }

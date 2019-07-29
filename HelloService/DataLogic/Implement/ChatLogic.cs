@@ -5,6 +5,7 @@ using HelloService.Entities.DB;
 using HelloService.Entities.Request;
 using HelloService.Entities.Response;
 using HelloService.Helper;
+using MongoDB.Driver;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,6 +15,8 @@ namespace HelloService.DataLogic.Implement
 {
     public class ChatLogic : IChatRoomLogic
     {
+        private static ChatLogic _instance;
+        public static ChatLogic Instance => _instance ?? (_instance = new ChatLogic());
         private readonly ChatRoomDao chatRoomDao;
         private readonly UserDao userDao;
         private readonly MessageDao messageDao;
@@ -34,39 +37,43 @@ namespace HelloService.DataLogic.Implement
             var chatRooms = chatRoomDao.GetChatRooms(userRef);
             if(chatRooms.Count > 0)
             {
-                var cleanChatRoom = CleanChatRoom(chatRooms);
-                if (cleanChatRoom.Count == 0) return result;
-                cleanChatRoom.Sort((chat1, chat2) =>
+                foreach(var chatRoom in chatRooms)
                 {
-                    if (chat1.LastMessage.Date > chat2.LastMessage.Date)
+                    int lastIndex = chatRoom.MessagesRef.Count - 1;
+                    var message = GetLastMessage(user, chatRoom, lastIndex);
+                    if(message != null)
                     {
-                        return -1;
+                        result.Add(new ChatRoomResponse(user, chatRoom, message, gmt));
                     }
-                    else if (chat1.LastMessage.Date > chat2.LastMessage.Date)
-                    {
-                        return 1;
-                    }
-                    else
-                        return 0;
-                });
-                foreach(var chatRoom in cleanChatRoom)
-                {
-                    result.Add(new ChatRoomResponse(user, chatRoom, gmt));
                 }
             }
             return result;
+        }
+
+        private Message GetLastMessage(User user, ChatRoom chatRoom, int lastIndex)
+        {
+            var message = chatRoom.MessagesRef[lastIndex].Retrieve<Message>();
+            if (user == message.MessageOwner)
+            {
+                if (!message.DeletedFromSender) return message;
+            }
+            else
+            {
+                if (!message.DeletedFromReceiver) return message;
+            }
+            return null;
         }
 
         public bool SendMessage(User user, SendMessageRequest request)
         {
             var chatRoom = chatRoomDao.FindByID(request.ChatRoomID);
             if (chatRoom == null) return false;
-            var invalidUser = user != chatRoom.Sender && user != chatRoom.Receiver;
+            var invalidUser = user != chatRoom.User1 && user != chatRoom.User2;
             if (invalidUser) return false;
             var model = new Message
             {
                 ChatRoom = chatRoom,
-                Date = Constant.SERVER_TIME,
+                Date = Constant.SERVER_TIME.Ticks,
                 MessageOwner = user,
                 Read = false,
                 Text = request.Text,
@@ -76,11 +83,12 @@ namespace HelloService.DataLogic.Implement
             var message = messageDao.InsertAndGet(model);
             if (message != null)
             {
-                chatRoom.LastMessage = message;
-                chatRoomDao.Update(chatRoom, new string[] { "LastMessage" });
+                if(chatRoom.MessagesRef == null) chatRoom.MessagesRef = new List<MongoDBRef>();
+                chatRoom.MessagesRef.Add(message.ToRef());
+                chatRoomDao.Update(chatRoom, new string[] { "MessagesRef" });
 
                 // TODO send notif
-                var receiver = user == chatRoom.Sender ? chatRoom.Receiver : chatRoom.Sender;
+                var receiver = user == chatRoom.User1 ? chatRoom.User2 : chatRoom.User1;
                 return true;
             }else return false;
         }
@@ -104,6 +112,62 @@ namespace HelloService.DataLogic.Implement
             }
         }
 
+        public bool RemoveMessageForMe(User user, string messageID)
+        {
+            var message = messageDao.FindByID(messageID);
+            if (message == null) return false;
+            var chatRoom = message.ChatRoom;
+            var invalidUser = user != chatRoom.User1 && user != chatRoom.User2;
+            if (invalidUser) return false;
+            return DeleteMessageByUser(user, message);
+        }
+
+        private bool DeleteMessageByUser(User user, Message message)
+        {
+            if (user == message.MessageOwner)
+            {
+                message.DeletedFromSender = true;
+                return messageDao.Update(message, new string[] { "DeletedFromSender" });
+            }
+            else
+            {
+                message.DeletedFromReceiver = true;
+                return messageDao.Update(message, new string[] { "DeletedFromReceiver" });
+            }
+        }
+
+        public bool RemoveChatRoom(User user, string chatRoomID)
+        {
+            var chatRoom = chatRoomDao.FindByID(chatRoomID);
+            if (chatRoom == null) return false;
+            var messages = messageDao.FindMessageByChatRoom(chatRoom);
+            AsyncRemoveMessage(user, messages);
+            return true;
+        }
+
+        private void AsyncRemoveMessage(User user, List<Message> messages)
+        {
+            if(messages.Count > 0)
+            {
+                foreach(var message in messages)
+                {
+                    DeleteMessageByUser(user, message);
+                }
+            }
+        }
+
+        public bool RemoveMessageForAll(User user, string messageID)
+        {
+            var message = messageDao.FindByID(messageID);
+            if (message == null) return false;
+            var chatRoom = message.ChatRoom;
+            var invalidUser = user != chatRoom.User1 && user != chatRoom.User2;
+            if (invalidUser) return false;
+            message.DeletedFromSender = true;
+            message.DeletedFromReceiver = true;
+            return messageDao.Update(message, new string[] { "DeletedFromSender", "DeletedFromReceiver" });
+        }
+
         public LastSeenResponse GetLastSeenByPhone(string phone, string gmt)
         {
             var user = userDao.FindByPhoneNumber(phone);
@@ -118,24 +182,32 @@ namespace HelloService.DataLogic.Implement
             var responses = new List<MessageResponse>();
             var chatRoom = chatRoomDao.FindByID(chatRoomID);
             if (chatRoom == null) return responses;
-            var invalidUser = user != chatRoom.Sender && user != chatRoom.Receiver;
+            var invalidUser = user != chatRoom.User1 && user != chatRoom.User2;
             if (invalidUser) return responses;
-            long date = long.Parse(lastDate);
-            var messages = messageDao.FindMessageByLastDate(chatRoomID, date);
+            long date = lastDate == null ? Constant.DEFAULT_LASTDATE : long.Parse(lastDate);
+            var messages = messageDao.FindMessageByLastDate(chatRoom, date);
             if (messages.Count > 0)
             {
                 foreach (var message in messages)
                 {
-                    responses.Add(new MessageResponse(message));
+                    if(user == message.MessageOwner)
+                    {
+                        if(!message.DeletedFromSender) responses.Add(new MessageResponse(message));
+                    }
+                    else
+                    {
+                        if(!message.DeletedFromReceiver) responses.Add(new MessageResponse(message));
+                    }
+                    
                 }
             }
 
             // TODO nanti bikin update Read di controller atau async
-            AsyUpdateReads(messages);
+            AsyncUpdateReads(messages);
             return responses;
         }
 
-        private void AsyUpdateReads(List<Message> messages)
+        private void AsyncUpdateReads(List<Message> messages)
         {
             foreach (var message in messages)
             {
@@ -152,20 +224,11 @@ namespace HelloService.DataLogic.Implement
             if (receiver == null) return false;
             var model = new ChatRoom
             {
-                Receiver = receiver,
-                Sender = sender
+                User2 = receiver,
+                User1 = sender
             };
             var success = chatRoomDao.Insert(model);
             return success;
-        }
-
-        private List<ChatRoom> CleanChatRoom(IList<ChatRoom> chatRooms)
-        {
-            foreach(var chatRoom in chatRooms)
-            {
-                if (chatRoom.LastMessage == null) chatRooms.Remove(chatRoom);
-            }
-            return new List<ChatRoom>(chatRooms);
         }
     }
 }

@@ -14,19 +14,12 @@ namespace HelloService.Controllers
 {
     public class ChatController : Controller
     {
-        private readonly ChatLogic chatLogic;
-
-        public ChatController()
-        {
-            chatLogic = new ChatLogic();
-        }
-
         [HttpGet, Authorize]
         public IActionResult GetChatRoom(string gmt)
         {
             var user = this.GetUserAuthorize();
             if (user == null) return Unauthorized();
-            var responses = chatLogic.GetChatRooms(user, gmt);
+            var responses = ChatLogic.Instance.GetChatRooms(user, gmt);
             return Ok(responses);
         }
 
@@ -35,7 +28,7 @@ namespace HelloService.Controllers
         {
             var user = this.GetUserAuthorize();
             if (user == null) return Unauthorized();
-            var response = chatLogic.CreatChatRoom(request);
+            var response = ChatLogic.Instance.CreatChatRoom(request);
             if (response) return Ok();
             else return Forbid();
         }
@@ -45,7 +38,7 @@ namespace HelloService.Controllers
         {
             var user = this.GetUserAuthorize();
             if (user == null) return Unauthorized();
-            var response = chatLogic.SendMessage(user, request);
+            var response = ChatLogic.Instance.SendMessage(user, request);
             if (response) return Ok();
             else return Forbid();
         }
@@ -55,7 +48,7 @@ namespace HelloService.Controllers
         {
             var user = this.GetUserAuthorize();
             if (user == null) return Unauthorized();
-            var response = chatLogic.GetMessage(user, chatRoomID, lastDate);
+            var response = ChatLogic.Instance.GetMessage(user, chatRoomID, lastDate);
             return Ok(response);
         }
         
@@ -64,39 +57,59 @@ namespace HelloService.Controllers
         {
             var user = this.GetUserAuthorize();
             if (user == null) return Unauthorized();
-            var response = chatLogic.GetLastSeenByPhone(phone, gmt);
+            var response = ChatLogic.Instance.GetLastSeenByPhone(phone, gmt);
             if (response == null) return NoContent();
             else return Ok(response);
         }
 
-        [HttpPost, Authorize]
+        [HttpPut, Authorize]
         public IActionResult InvokeOnline()
         {
             var user = this.GetUserAuthorize();
             if (user == null) return Unauthorized();
-            var response = chatLogic.InvokeStatus(user, "Online");
+            var response = ChatLogic.Instance.InvokeStatus(user, "Online");
             if (!response) return Forbid();
             else return Ok();
         }
 
-        [HttpGet, Authorize]
-        public IActionResult InvokeOffline() // pangiil ini untuk insert awal
+        [HttpPut, Authorize]
+        public IActionResult InvokeOffline()
         {
             var user = this.GetUserAuthorize();
             if (user == null) return Unauthorized();
-            var response = chatLogic.InvokeStatus(user, Constant.SERVER_TIME.Ticks.ToString()); // Test it
+            var response = ChatLogic.Instance.InvokeStatus(user, Constant.SERVER_TIME.Ticks.ToString());
             if (!response) return Forbid();
             else return Ok();
         }
 
-        public IActionResult RemoveChatRoom()
+        [HttpDelete, Authorize]
+        public IActionResult RemoveMessageForMe(string messageID)
         {
-            return Ok();
+            var user = this.GetUserAuthorize();
+            if (user == null) return Unauthorized();
+            var response = ChatLogic.Instance.RemoveMessageForMe(user, messageID);
+            if (response) return Ok();
+            else return Forbid();
         }
 
-        public IActionResult RemoveMessage()
+        [HttpDelete, Authorize]
+        public IActionResult RemoveMessageForAll(string messageID)
         {
-            return Ok();
+            var user = this.GetUserAuthorize();
+            if (user == null) return Unauthorized();
+            var response = ChatLogic.Instance.RemoveMessageForAll(user, messageID);
+            if (response) return Ok();
+            else return Forbid();
+        }
+
+        [HttpDelete, Authorize]
+        public IActionResult RemoveChatRoom(string chatRoomID)
+        {
+            var user = this.GetUserAuthorize();
+            if (user == null) return Unauthorized();
+            var response = ChatLogic.Instance.RemoveChatRoom(user, chatRoomID);
+            if (response) return Ok();
+            else return Forbid();
         }
     }
 }

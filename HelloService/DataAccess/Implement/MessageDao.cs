@@ -23,5 +23,13 @@ namespace HelloService.DataAccess.Implement
             var messages = messageDao.Find.WhenMatch(filterChat & filterDate, new PageDefinition("Date", false));
             return new List<Message>(messages);
         }
+
+        internal List<Message> FindMessageByChatRoom(ChatRoom chatRoom)
+        {
+            var builder = new FilterDefinitionBuilder<Message>();
+            var filterChat = builder.Eq("ChatRoom", chatRoom.ToRef());
+            var messages = messageDao.Find.WhenMatch(filterChat, new PageDefinition("Date", false));
+            return new List<Message>(messages);
+        }
     }
 }
