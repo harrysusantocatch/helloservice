@@ -11,6 +11,29 @@ namespace HelloService.Controllers
 {
     public class UserController : Controller
     {
+        [HttpPost]
+        public IActionResult Registration([FromBody] RegisterRequest request)
+        {
+            var result = UserLogic.Instance.Register(request);
+            return Ok(result);
+        }
+
+        [HttpPut]
+        public IActionResult VerificationCode([FromBody]ValidationCodeRequest request)
+        {
+            var isValid = UserLogic.Instance.VerificationCode(request);
+            if (isValid) return Ok();
+            else return NoContent();
+        }
+
+        [HttpPost]
+        public IActionResult ResendCode([FromBody] ResendCodeRequest request)
+        {
+            var success = UserLogic.Instance.ResendCode(request.Phone);
+            if (success) return Ok();
+            else return NoContent();
+        }
+
         [HttpPost, AllowAnonymous]
         public IActionResult Login([FromBody] LoginRequest request)
         {
@@ -20,7 +43,7 @@ namespace HelloService.Controllers
             var user = UserLogic.Instance.FindByPhoneNumber(request.Phone);
             if (user == null) return NoContent();
             if (!user.Active) return NoContent();
-            if (user.SecurityCode != request.SecurityCode) return NoContent();
+            //if (user.SecurityCode != request.SecurityCode) return NoContent();
             var result = UserLogic.Instance.Login(user, device);
             return Ok(result);
         }
@@ -32,30 +55,6 @@ namespace HelloService.Controllers
             if (user == null) return Unauthorized();
             UserLogic.Instance.Logout(user);
             return Ok();
-        }
-
-        [HttpPost]
-        public IActionResult Registration([FromBody] RegisterRequest request)
-        {
-            var result = UserLogic.Instance.Register(request);
-            return Ok(result);
-        }
-
-        [HttpGet]
-        public IActionResult VerificationCode(string phone, string code)
-        {
-            var request = new ValidationCodeRequest { Phone = phone, Code = code };
-            var isValid = UserLogic.Instance.IsValidVerificationCode(request);
-            if (isValid) return Ok();
-            else return Forbid();
-        }
-
-        [HttpPost]
-        public IActionResult ResendCode([FromBody] ResendCodeRequest request)
-        {
-            var success = UserLogic.Instance.ResendCode(request.Phone);
-            if (success) return Ok();
-            else return Forbid();
         }
 
         [HttpPost, Authorize]

@@ -15,5 +15,11 @@ namespace HelloService.DataAccess.Implement
             var value = dao.Find.ByUniqueID("Phone", Encryptor.EncryptSHA256(phoneNumber));
             return value;
         }
+
+        public RegistrationCode FindByPhoneNumberEncrypted(string phoneEncrypted)
+        {
+            var value = dao.Find.ByUniqueID("Phone", phoneEncrypted);
+            return value;
+        }
     }
 }

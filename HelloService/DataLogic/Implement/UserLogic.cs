@@ -25,46 +25,12 @@ namespace HelloService.DataLogic.Implement
             registerDao = new RegistrationCodeDao();
         }
 
-        public User FindByPhoneNumber(string phoneNumber)
-        {
-            var user = userDao.FindByPhoneNumber(Encryptor.EncryptSHA256(phoneNumber));
-            return user;
-        }
-
-        public LoginResponse Login(User user, Device device)
-        {
-            Claim[] claims =
-                {
-                    new Claim(ClaimTypes.Name, user.FullName),
-                    new Claim(ClaimTypes.SerialNumber, device.Token),
-                    new Claim(ClaimTypes.Sid, user.ID.ToString())
-                };
-            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(Constant.KEY_ENCRYPT));
-            var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
-            var token = new JwtSecurityToken(Startup.Configuration["Jwt:Issuer"],
-                                             Startup.Configuration["Jwt:Issuer"],
-                                             claims,
-                                             expires: Constant.SERVER_TIME.AddDays(7),
-                                             signingCredentials: creds);
-            user.Device = device;
-            var success = userDao.Update(user, new string[] { "Device" });
-            if (success) return
-                 new LoginResponse { Token = new JwtSecurityTokenHandler().WriteToken(token), Expire = token.ValidTo.ToString("MM/dd/yy H:mm:ss") };
-            else return null;
-        }
-
-        public void Logout(User user)
-        {
-            user.Device = null;
-            userDao.Update(user, new string[] { "Device" });
-        }
-
         public UserResponse Register(RegisterRequest request)
         {
             if (request.Phone == null || request.Device == null) return null;
             if (request.Device.Token == null) return null;
             var findUser = userDao.FindByPhoneNumber(request.Phone);
-            if(findUser == null)
+            if (findUser == null)
             {
                 var model = new User
                 {
@@ -82,24 +48,85 @@ namespace HelloService.DataLogic.Implement
             }
             else
             {
+                if (findUser.Active) return null;
                 findUser.Device = request.Device;
                 findUser.Active = false;
-                var success = userDao.Update(findUser, new string[] { "Device", "Active" });
-                if (success)
-                {
-                    SaveAndSendRegistrationCode(findUser);
-                    return new UserResponse(findUser);
-                }
-                else return null;
+                userDao.Update(findUser, new string[] { "Device", "Active" });
+                SaveAndSendRegistrationCode(findUser);
+                return new UserResponse(findUser);
             }
+        }
+
+        public bool VerificationCode(ValidationCodeRequest request)
+        {
+            var registrationCode = registerDao.FindByPhoneNumber(request.Phone);
+            if (registrationCode == null) return false;
+            if (DateTime.Compare(registrationCode.ExpireDate, Constant.SERVER_TIME) < 0) return false;
+            if (registrationCode.Code != request.Code) return false;
+            var user = userDao.FindByPhoneNumber(request.Phone);
+            if (user == null) return false;
+            user.Active = true;
+            userDao.Update(user, new string[] { "Active" });
+            return true;
+        }
+
+        public bool ResendCode(string phoneNumber)
+        {
+            var user = userDao.FindByPhoneNumber(phoneNumber);
+            if (user == null) return false;
+            if (user.Active) return false;
+            var code = GenerateCode();
+            var registrationCode = registerDao.FindByPhoneNumber(phoneNumber);
+            if (registrationCode != null) registerDao.Delete(registrationCode);
+            var success = registerDao.Insert(new RegistrationCode { Code = code, ExpireDate = Constant.SERVER_TIME.AddMinutes(10), Phone = Encryptor.EncryptSHA256(phoneNumber) });
+            if (success)
+            {
+                // TODO send notification with code
+                return true;
+            }
+            return false;
+        }
+
+        public User FindByPhoneNumber(string phoneNumber)
+        {
+            var user = userDao.FindByPhoneNumber(phoneNumber);
+            return user;
+        }
+
+        public LoginResponse Login(User user, Device device)
+        {
+            Claim[] claims =
+                {
+                    new Claim(ClaimTypes.Name, "Default"),
+                    new Claim(ClaimTypes.SerialNumber, device.Token),
+                    new Claim(ClaimTypes.Sid, user.ID.ToString())
+                };
+            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(Constant.KEY_ENCRYPT));
+            var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+            var token = new JwtSecurityToken(Startup.Configuration["Jwt:Issuer"],
+                                             Startup.Configuration["Jwt:Issuer"],
+                                             claims,
+                                             expires: Constant.SERVER_TIME.AddDays(7),
+                                             signingCredentials: creds);
+            user.Device = device;
+            userDao.Update(user, new string[] { "Device" });
+            var strToken = new JwtSecurityTokenHandler().WriteToken(token);
+            var strExpireDate = token.ValidTo.ToString("MM/dd/yy H:mm:ss");
+            return new LoginResponse { Token = strToken, Expire = strExpireDate };
+        }
+
+        public void Logout(User user)
+        {
+            user.Device = null;
+            userDao.Update(user, new string[] { "Device" });
         }
 
         private void SaveAndSendRegistrationCode(User user)
         {
             var code = GenerateCode();
-            var registrationCode = registerDao.FindByPhoneNumber(user.Phone);
+            var registrationCode = registerDao.FindByPhoneNumberEncrypted(user.Phone);
             if (registrationCode != null) registerDao.Delete(registrationCode);
-            var success = registerDao.Insert(new RegistrationCode { Code = code, ExpireDate = Constant.SERVER_TIME.AddMinutes(10), Phone = Encryptor.EncryptSHA256(user.Phone)});
+            var success = registerDao.Insert(new RegistrationCode { Code = code, ExpireDate = Constant.SERVER_TIME.AddMinutes(10), Phone = user.Phone});
             if (success)
             {
                 // TODO send notification with code
@@ -137,20 +164,6 @@ namespace HelloService.DataLogic.Implement
                 strCode = zero + strCode;
             }
             return strCode;
-        }
-
-        public bool IsValidVerificationCode(ValidationCodeRequest request)
-        {
-            var registrationCode = registerDao.FindByPhoneNumber(request.Phone);
-            if (registrationCode == null) return false;
-            if (DateTime.Compare(registrationCode.ExpireDate, Constant.SERVER_TIME) < 0) return false;
-            if (registrationCode.Code != request.Code) return false;
-            return true;
-        }
-
-        public bool ResendCode(string phoneNumber)
-        {
-            return SaveAndSendRegistrationCode(phoneNumber);
         }
 
         public bool UpdateProfilePicture(User user, Blob content)
