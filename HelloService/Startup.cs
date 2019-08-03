@@ -74,6 +74,8 @@ namespace HelloService
             }
 
             app.UseHttpsRedirection();
+
+            app.UseAuthentication();
             app.UseMvc((routes) =>
             {
                 routes.MapRoute("default", "{controller}/{action}/{id?}");

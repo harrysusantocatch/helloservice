@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace HelloService.Controllers
 {
-    public class StoryController : Controller
+    public class StoryController : BaseController
     {
         public IActionResult GetListStory()
         {

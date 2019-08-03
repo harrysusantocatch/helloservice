@@ -9,7 +9,7 @@ using HelloService.DataAccess.Implement;
 
 namespace HelloService.Controllers
 {
-    public class UserController : Controller
+    public class UserController : BaseController
     {
         [HttpPost]
         public IActionResult Registration([FromBody] RegisterRequest request)
@@ -38,7 +38,7 @@ namespace HelloService.Controllers
         public IActionResult Login([FromBody] LoginRequest request)
         {
             var headers = Request.Headers;
-            var device = UserHelper.GetDeviceFromHeader(headers);
+            var device = UserLogic.Instance.GetDeviceFromHeader(headers);
             if (device == null) return BadRequest();
             var user = UserLogic.Instance.FindByPhoneNumber(request.Phone);
             if (user == null) return NoContent();
@@ -57,7 +57,7 @@ namespace HelloService.Controllers
             return Ok();
         }
 
-        [HttpPost, Authorize]
+        [HttpPut, Authorize]
         public IActionResult UpdateProfilePicture([FromBody] UpdateProfilePictureRequest request)
         {
             var user = this.GetUserAuthorize();
@@ -67,7 +67,7 @@ namespace HelloService.Controllers
             else return Forbid();
         }
 
-        [HttpPost, Authorize]
+        [HttpPut, Authorize]
         public IActionResult UpdateName([FromBody] UpdateNameRequest request)
         {
             var user = this.GetUserAuthorize();
@@ -77,7 +77,7 @@ namespace HelloService.Controllers
             else return Forbid();
         }
 
-        [HttpPost, Authorize]
+        [HttpPut, Authorize]
         public IActionResult UpdateAbout([FromBody] UpdateAboutRequest request)
         {
             var user = this.GetUserAuthorize();

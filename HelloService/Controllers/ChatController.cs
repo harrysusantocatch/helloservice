@@ -12,7 +12,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace HelloService.Controllers
 {
-    public class ChatController : Controller
+    public class ChatController : BaseController
     {
         [HttpGet, Authorize]
         public IActionResult GetChatRoom(string gmt)

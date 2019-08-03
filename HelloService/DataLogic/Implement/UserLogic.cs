@@ -9,6 +9,7 @@ using HelloService.Entities.Model;
 using HelloService.Entities.Request;
 using HelloService.Entities.Response;
 using HelloService.Helper;
+using Microsoft.AspNetCore.Http;
 using Microsoft.IdentityModel.Tokens;
 
 namespace HelloService.DataLogic.Implement
@@ -97,7 +98,7 @@ namespace HelloService.DataLogic.Implement
         {
             Claim[] claims =
                 {
-                    new Claim(ClaimTypes.Name, "Default"),
+                    new Claim(ClaimTypes.MobilePhone, user.Phone),
                     new Claim(ClaimTypes.SerialNumber, device.Token),
                     new Claim(ClaimTypes.Sid, user.ID.ToString())
                 };
@@ -131,20 +132,6 @@ namespace HelloService.DataLogic.Implement
             {
                 // TODO send notification with code
             }
-        }
-
-        private bool SaveAndSendRegistrationCode(string phone)
-        {
-            var code = GenerateCode();
-            var registrationCode = registerDao.FindByPhoneNumber(phone);
-            if (registrationCode != null) registerDao.Delete(registrationCode);
-            var success = registerDao.Insert(new RegistrationCode { Code = code, ExpireDate = Constant.SERVER_TIME.AddMinutes(10), Phone = Encryptor.EncryptSHA256(phone) });
-            if (success)
-            {
-                // TODO send notification with code
-                return true;
-            }
-            return false;
         }
 
         private string GenerateCode()
@@ -182,6 +169,21 @@ namespace HelloService.DataLogic.Implement
         {
             user.About = about;
             return userDao.Update(user, new string[] { "About" });
+        }
+
+        public Device GetDeviceFromHeader(IHeaderDictionary headers)
+        {
+            if (!(headers.ContainsKey("device-type") && headers.ContainsKey("device-id"))) return null;
+            var deviceType = headers["device-type"].ToString();
+            var device = new Device()
+            {
+                Token = headers["device-id"]
+            };
+            if ("android".Equals(deviceType.ToLower()))
+                device.Type = DeviceType.Android;
+            else
+                device.Type = DeviceType.iOS;
+            return device;
         }
     }
 }

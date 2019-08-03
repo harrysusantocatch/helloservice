@@ -13,5 +13,10 @@ namespace HelloService.Helper
             byte[] outputBytes = sha1.ComputeHash(inputBytes);
             return BitConverter.ToString(outputBytes).Replace("-", "").ToLower();
         }
+
+        public static string ApiKey()
+        {
+            return "harry";
+        }
     }
 }
