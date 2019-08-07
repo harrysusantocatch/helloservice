@@ -1,11 +1,8 @@
-﻿using HelloService.Helper;
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using HelloService.Entities.Request;
 using HelloService.DataLogic.Implement;
-using HelloService.DataAccess.Implement;
-
-// For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+using HelloService.Entities.Response;
 
 namespace HelloService.Controllers
 {
@@ -15,15 +12,16 @@ namespace HelloService.Controllers
         public IActionResult Registration([FromBody] RegisterRequest request)
         {
             var result = UserLogic.Instance.Register(request);
-            return Ok(result);
+            if (result is MessageErrorResponse) return this.NotAcceptable((MessageErrorResponse)result);
+            else return Ok(result);
         }
 
         [HttpPut]
         public IActionResult VerificationCode([FromBody]ValidationCodeRequest request)
         {
-            var isValid = UserLogic.Instance.VerificationCode(request);
-            if (isValid) return Ok();
-            else return NoContent();
+            var result = UserLogic.Instance.VerificationCode(request);
+            if (result is MessageErrorResponse) return this.NotAcceptable((MessageErrorResponse)result);
+            else return Ok(result);
         }
 
         [HttpPost]

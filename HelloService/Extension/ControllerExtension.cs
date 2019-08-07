@@ -1,7 +1,10 @@
 ﻿using System;
+using System.Net;
 using System.Security.Claims;
 using HelloService.DataAccess.Implement;
 using HelloService.Entities.DB;
+using HelloService.Entities.Response;
+using Newtonsoft.Json;
 
 namespace Microsoft.AspNetCore.Mvc
 {
@@ -16,6 +19,32 @@ namespace Microsoft.AspNetCore.Mvc
                 return null;
             return user;
         }
+
+        public static IActionResult Ambiguous<T>(this T _) where T : Controller
+        {
+            return new StatusCodeResult(300);
+        }
+
+        public static IActionResult NotAcceptable<T>(this T _, MessageErrorResponse message) where T : Controller
+        {
+            return Result(HttpStatusCode.NotAcceptable, message);
+        }
+
+        public static IActionResult Conflict<T>(this T _) where T : Controller
+        {
+            return new StatusCodeResult(409);
+        }
+
+        public static IActionResult InternalServerError<T>(this T _) where T : Controller
+        {
+            return new StatusCodeResult(500);
+        }
+        private static ActionResult Result(HttpStatusCode statusCode, MessageErrorResponse message) => new ContentResult
+        {
+            StatusCode = (int)statusCode,
+            Content = JsonConvert.SerializeObject(message),
+            ContentType = "application/json"
+        };
     }
 
 

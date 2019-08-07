@@ -26,10 +26,10 @@ namespace HelloService.DataLogic.Implement
             registerDao = new RegistrationCodeDao();
         }
 
-        public UserResponse Register(RegisterRequest request)
+        public object Register(RegisterRequest request)
         {
-            if (request.Phone == null || request.Device == null) return null;
-            if (request.Device.Token == null) return null;
+            if (request.Phone == null || request.Device == null) return new MessageErrorResponse(100, "Request tidak bole kosong");
+            if (request.Device.Token == null) return new MessageErrorResponse(101, "Token tidak bole kosong");
             var findUser = userDao.FindByPhoneNumber(request.Phone);
             if (findUser == null)
             {
@@ -45,11 +45,11 @@ namespace HelloService.DataLogic.Implement
                     SaveAndSendRegistrationCode(user);
                     return new UserResponse(user);
                 }
-                else return null;
+                else return new MessageErrorResponse(102, "Gagal Insert User");
             }
             else
             {
-                if (findUser.Active) return null;
+                if (findUser.Active) return new MessageErrorResponse(103, "User sudah terdaftar");
                 findUser.Device = request.Device;
                 findUser.Active = false;
                 userDao.Update(findUser, new string[] { "Device", "Active" });
@@ -58,14 +58,14 @@ namespace HelloService.DataLogic.Implement
             }
         }
 
-        public bool VerificationCode(ValidationCodeRequest request)
+        public object VerificationCode(ValidationCodeRequest request)
         {
             var registrationCode = registerDao.FindByPhoneNumber(request.Phone);
-            if (registrationCode == null) return false;
-            if (DateTime.Compare(registrationCode.ExpireDate, Constant.SERVER_TIME) < 0) return false;
-            if (registrationCode.Code != request.Code) return false;
+            if (registrationCode == null) return new MessageErrorResponse(104, "Tidak ada kode verifikasi");
+            if (DateTime.Compare(registrationCode.ExpireDate, Constant.SERVER_TIME) < 0) return new MessageErrorResponse(105, "kode verifikasi sudah kadaluarsa");
+            if (registrationCode.Code != request.Code) return new MessageErrorResponse(105, "kode verifikasi tidak sesuai");
             var user = userDao.FindByPhoneNumber(request.Phone);
-            if (user == null) return false;
+            if (user == null) return new MessageErrorResponse(106, "User tidak terdaftar");
             user.Active = true;
             userDao.Update(user, new string[] { "Active" });
             return true;
@@ -76,7 +76,7 @@ namespace HelloService.DataLogic.Implement
             var user = userDao.FindByPhoneNumber(phoneNumber);
             if (user == null) return false;
             if (user.Active) return false;
-            var code = GenerateCode();
+            var code = GenerateVerificationCode();
             var registrationCode = registerDao.FindByPhoneNumber(phoneNumber);
             if (registrationCode != null) registerDao.Delete(registrationCode);
             var success = registerDao.Insert(new RegistrationCode { Code = code, ExpireDate = Constant.SERVER_TIME.AddMinutes(10), Phone = Encryptor.EncryptSHA256(phoneNumber) });
@@ -124,7 +124,7 @@ namespace HelloService.DataLogic.Implement
 
         private void SaveAndSendRegistrationCode(User user)
         {
-            var code = GenerateCode();
+            var code = GenerateVerificationCode();
             var registrationCode = registerDao.FindByPhoneNumberEncrypted(user.Phone);
             if (registrationCode != null) registerDao.Delete(registrationCode);
             var success = registerDao.Insert(new RegistrationCode { Code = code, ExpireDate = Constant.SERVER_TIME.AddMinutes(10), Phone = user.Phone});
@@ -134,7 +134,7 @@ namespace HelloService.DataLogic.Implement
             }
         }
 
-        private string GenerateCode()
+        private string GenerateVerificationCode()
         {
             int defaultLength = 4;
             int code = new Random().Next(0, 9999);
