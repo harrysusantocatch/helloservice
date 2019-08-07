@@ -10,6 +10,6 @@ namespace HelloService.DataAccess.Interface
 {
     interface IChatRoomDao
     {
-        IList<ChatRoom> GetChatRooms(MongoDBRef userRef);
+        IList<ChatRoom> GetMyChatRoom(MongoDBRef userRef);
     }
 }

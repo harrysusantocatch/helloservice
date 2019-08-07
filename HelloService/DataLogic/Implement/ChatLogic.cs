@@ -34,7 +34,7 @@ namespace HelloService.DataLogic.Implement
         {
             var result = new List<ChatRoomResponse>();
             var userRef = user.ToRef();
-            var chatRooms = chatRoomDao.GetChatRooms(userRef);
+            var chatRooms = chatRoomDao.GetMyChatRoom(userRef);
             if(chatRooms.Count > 0)
             {
                 foreach(var chatRoom in chatRooms)
@@ -216,19 +216,25 @@ namespace HelloService.DataLogic.Implement
             }
         }
 
-        public bool CreatChatRoom(ChatRoomRequest request)
+        public string CreatChatRoom(User user, ChatRoomRequest request)
         {
-            var sender = userDao.FindByID(request.SenderID);
-            if (sender == null) return false;
             var receiver = userDao.FindByID(request.ReceiverID);
-            if (receiver == null) return false;
-            var model = new ChatRoom
+            if (receiver == null) return null;
+            var chatRoom = chatRoomDao.FindChatRoomByUsers(user, receiver);
+            if (chatRoom == null)
             {
-                User2 = receiver,
-                User1 = sender
-            };
-            var success = chatRoomDao.Insert(model);
-            return success;
+                chatRoom = chatRoomDao.FindChatRoomByUsers(receiver, user);
+                if(chatRoom == null)
+                {
+                    var model = new ChatRoom
+                    {
+                        User2 = receiver,
+                        User1 = user
+                    };
+                    chatRoom = chatRoomDao.InsertAndGet(model);
+                }
+            }
+            return chatRoom.ID.ToString();
         }
     }
 }

@@ -7,7 +7,6 @@ namespace HelloService.Entities.Request
 {
     public class ChatRoomRequest
     {
-        public string SenderID { get; set; }
         public string ReceiverID { get; set; }
     }
 }
