@@ -24,17 +24,17 @@ namespace HelloService.Controllers
         }
 
         [HttpPost, Authorize]
-        public IActionResult CreateChatRoom(ChatRoomRequest request)
+        public IActionResult CreateChatRoom([FromBody]ChatRoomRequest request)
         {
             var user = this.GetUserAuthorize();
             if (user == null) return Unauthorized();
-            var response = ChatLogic.Instance.CreatChatRoom(request);
-            if (response) return Ok();
-            else return Forbid();
+            var response = ChatLogic.Instance.CreatChatRoom(user, request);
+            if (response == null) return Forbid();
+            else return Ok(response);
         }
 
         [HttpPost, Authorize]
-        public IActionResult SendMessage(SendMessageRequest request)
+        public IActionResult SendMessage([FromBody]SendMessageRequest request)
         {
             var user = this.GetUserAuthorize();
             if (user == null) return Unauthorized();
