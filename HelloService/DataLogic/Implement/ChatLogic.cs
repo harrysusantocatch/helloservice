@@ -6,9 +6,7 @@ using HelloService.Entities.Request;
 using HelloService.Entities.Response;
 using HelloService.Helper;
 using MongoDB.Driver;
-using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 
 namespace HelloService.DataLogic.Implement
@@ -39,6 +37,7 @@ namespace HelloService.DataLogic.Implement
             {
                 foreach(var chatRoom in chatRooms)
                 {
+                    if (chatRoom.MessagesRef == null) continue;
                     int lastIndex = chatRoom.MessagesRef.Count - 1;
                     var message = GetLastMessage(user, chatRoom, lastIndex);
                     if(message != null)
@@ -93,7 +92,7 @@ namespace HelloService.DataLogic.Implement
             }else return false;
         }
 
-        public bool InvokeStatus(User user, string statusOrStrDate)
+        public void InvokeStatus(User user, string statusOrStrDate)
         {
             var lastSeen = lastSeenDao.FindByUniqueID("User", user.ToRef());
             if (lastSeen == null)
@@ -103,12 +102,12 @@ namespace HelloService.DataLogic.Implement
                     User = user,
                     LongDateString = statusOrStrDate
                 };
-                return lastSeenDao.Insert(model);
+                lastSeenDao.Insert(model);
             }
             else
             {
                 lastSeen.LongDateString = statusOrStrDate;
-                return lastSeenDao.Update(lastSeen, new string[] { "LongDateString" });
+                lastSeenDao.Update(lastSeen, new string[] { "LongDateString" });
             }
         }
 
@@ -177,15 +176,15 @@ namespace HelloService.DataLogic.Implement
             return new LastSeenResponse(lastSeen.LongDateString, gmt);
         }
 
-        public List<MessageResponse> GetMessage(User user, string chatRoomID, string lastDate)
+        public List<MessageResponse> GetMessage(User user, string chatRoomID, string longStrDate)
         {
             var responses = new List<MessageResponse>();
             var chatRoom = chatRoomDao.FindByID(chatRoomID);
             if (chatRoom == null) return responses;
             var invalidUser = user != chatRoom.User1 && user != chatRoom.User2;
             if (invalidUser) return responses;
-            long date = lastDate == null ? Constant.DEFAULT_LASTDATE : long.Parse(lastDate);
-            var messages = messageDao.FindMessageByLastDate(chatRoom, date);
+            long longDate = longStrDate == null ? Constant.DEFAULT_LASTDATE : long.Parse(longStrDate);
+            var messages = messageDao.FindMessageByLastDate(chatRoom, longDate);
             if (messages.Count > 0)
             {
                 foreach (var message in messages)
@@ -202,24 +201,26 @@ namespace HelloService.DataLogic.Implement
                 }
             }
 
-            // TODO nanti bikin update Read di controller atau async
-            AsyncUpdateReads(messages);
+            Task.Run(() => UpdateReads(user, messages));
             return responses;
         }
 
-        private void AsyncUpdateReads(List<Message> messages)
+        private void UpdateReads(User user, List<Message> messages)
         {
             foreach (var message in messages)
             {
-                message.Read = true;
-                messageDao.Update(message, new string[] { "Read" });
+                if(message.MessageOwner != user)
+                {
+                    message.Read = true;
+                    messageDao.Update(message, new string[] { "Read" });
+                }
             }
         }
 
-        public string CreatChatRoom(User user, ChatRoomRequest request)
+        public object CreatChatRoom(User user, ChatRoomRequest request)
         {
             var receiver = userDao.FindByID(request.ReceiverID);
-            if (receiver == null) return null;
+            if (receiver == null) return new MessageErrorResponse(106, "User tidak terdaftar");
             var chatRoom = chatRoomDao.FindChatRoomByUsers(user, receiver);
             if (chatRoom == null)
             {
@@ -234,7 +235,7 @@ namespace HelloService.DataLogic.Implement
                     chatRoom = chatRoomDao.InsertAndGet(model);
                 }
             }
-            return chatRoom.ID.ToString();
+            return new { ChatID = chatRoom.ID.ToString() };
         }
     }
 }

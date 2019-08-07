@@ -4,7 +4,7 @@ using static HelloService.Helper.Constant;
 
 namespace HelloService.Entities.DB
 {
-    [DtoClass(DATABASE_NAME, "CHATROOM")]
+    [DtoClass(DATABASE_NAME, "LAST_SEEN")]
     public class LastSeen : Dto
     {
         [DtoUniqueField, BsonSerializer(typeof(ObjectRef<User>))]

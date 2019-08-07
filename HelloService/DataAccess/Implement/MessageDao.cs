@@ -15,11 +15,11 @@ namespace HelloService.DataAccess.Implement
     {
         private static readonly IDao<Message> messageDao = DaoContext.GetDao<Message>();
 
-        public List<Message> FindMessageByLastDate(ChatRoom chatRoom, long lastDate)
+        public List<Message> FindMessageByLastDate(ChatRoom chatRoom, long longLastDate)
         {
             var builder = new FilterDefinitionBuilder<Message>();
             var filterChat = builder.Eq("ChatRoom", chatRoom.ToRef());
-            var filterDate = builder.Gt("Date", lastDate);
+            var filterDate = builder.Gt("Date", longLastDate);
             var messages = messageDao.Find.WhenMatch(filterChat & filterDate, new PageDefinition("Date", false));
             return new List<Message>(messages);
         }

@@ -1,14 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using HelloService.DataLogic.Implement;
+﻿using HelloService.DataLogic.Implement;
 using HelloService.Entities.Request;
+using HelloService.Entities.Response;
+using HelloService.Extension;
 using HelloService.Helper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-
-// For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
 namespace HelloService.Controllers
 {
@@ -29,7 +25,7 @@ namespace HelloService.Controllers
             var user = this.GetUserAuthorize();
             if (user == null) return Unauthorized();
             var response = ChatLogic.Instance.CreatChatRoom(user, request);
-            if (response == null) return Forbid();
+            if (response is MessageErrorResponse) return this.NotAcceptable((MessageErrorResponse)response);
             else return Ok(response);
         }
 
@@ -44,11 +40,11 @@ namespace HelloService.Controllers
         }
 
         [HttpGet, Authorize]
-        public IActionResult GetMessages(string chatRoomID, string lastDate)
+        public IActionResult GetMessages(string chatRoomID, string longLastDate)
         {
             var user = this.GetUserAuthorize();
             if (user == null) return Unauthorized();
-            var response = ChatLogic.Instance.GetMessage(user, chatRoomID, lastDate);
+            var response = ChatLogic.Instance.GetMessage(user, chatRoomID, longLastDate);
             return Ok(response);
         }
         
@@ -67,9 +63,8 @@ namespace HelloService.Controllers
         {
             var user = this.GetUserAuthorize();
             if (user == null) return Unauthorized();
-            var response = ChatLogic.Instance.InvokeStatus(user, "Online");
-            if (!response) return Forbid();
-            else return Ok();
+            ChatLogic.Instance.InvokeStatus(user, "Online");
+            return Ok();
         }
 
         [HttpPut, Authorize]
@@ -77,9 +72,8 @@ namespace HelloService.Controllers
         {
             var user = this.GetUserAuthorize();
             if (user == null) return Unauthorized();
-            var response = ChatLogic.Instance.InvokeStatus(user, Constant.SERVER_TIME.Ticks.ToString());
-            if (!response) return Forbid();
-            else return Ok();
+            ChatLogic.Instance.InvokeStatus(user, Constant.SERVER_TIME.ToUnixLong().ToString());
+            return Ok();
         }
 
         [HttpDelete, Authorize]

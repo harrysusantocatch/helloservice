@@ -12,17 +12,18 @@ namespace HelloService.Entities.Response
 
         public LastSeenResponse(string strDate, string gmt)
         {
-            if(strDate != null)
+            if (strDate != null)
             {
                 if ("Online".Equals(strDate)) StrDate = strDate;
                 else
                 {
                     long longDate = long.Parse(strDate);
                     DateTime start = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
-                    DateTime date = start.AddMilliseconds(longDate).ToLocalTime();
+                    DateTime date = start.AddMilliseconds(longDate);
                     StrDate = TimeConverter.GetDisplayDate(date, gmt);
                 }
             }
+            else StrDate = "Offline";
         }
     }
 }
