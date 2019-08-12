@@ -140,11 +140,11 @@ namespace HelloService.DataLogic.Implement
             var chatRoom = chatRoomDao.FindByID(chatRoomID);
             if (chatRoom == null) return false;
             var messages = messageDao.FindMessageByChatRoom(chatRoom);
-            AsyncRemoveMessage(user, messages);
+            Task.Run(()=> RemoveMessage(user, messages));
             return true;
         }
 
-        private void AsyncRemoveMessage(User user, List<Message> messages)
+        private void RemoveMessage(User user, List<Message> messages)
         {
             if(messages.Count > 0)
             {
